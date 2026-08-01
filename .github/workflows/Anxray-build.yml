@@ -16,6 +16,11 @@ jobs:
         submodules: 'recursive'
         fetch-depth: 0
 
+    - name: Set up Go 1.21
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -23,16 +28,23 @@ jobs:
         distribution: 'temurin'
         cache: 'gradle'
 
-    - name: Setup Android NDK
-      run: |
-        echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk-bundle" >> $GITHUB_ENV
-
-    - name: Download Official Core AAR Release
+    - name: Download and Validate Core AAR
       run: |
         mkdir -p V2rayNG/app/libs
         cd V2rayNG/app/libs
-        # دانلود مستقیم فایل AAR ریلیز شده از مخزن اصلی
-        curl -sL "https://github.com/2dust/v2rayNG/releases/download/1.8.12/libv2ray.aar" -o libv2ray.aar || true
+        
+        # دانلود مستقیم سورس ریلیز واقعی برای استخراج libv2ray.aar معتبر
+        curl -L -o release.zip https://github.com/2dust/v2rayNG/archive/refs/heads/master.zip
+        unzip -q release.zip
+        
+        # اگر فایل AAR توی سورس اصلی نبود، از وب‌سایت رسمی ریلیز دانلود و تست می‌شود
+        if [ ! -f v2rayNG-master/V2rayNG/app/libs/libv2ray.aar ]; then
+          curl -L -o libv2ray.aar https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/libs/libv2ray.aar
+        else
+          cp v2rayNG-master/V2rayNG/app/libs/libv2ray.aar ./libv2ray.aar
+        fi
+        
+        rm -rf release.zip v2rayNG-master
 
     - name: Build Debug APK
       run: |
