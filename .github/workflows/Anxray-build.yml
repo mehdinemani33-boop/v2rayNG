@@ -16,29 +16,40 @@ jobs:
         submodules: 'recursive'
         fetch-depth: 0
 
+    - name: Set up Go 1.21
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21.x'
+
+    - name: Set up NDK
+      uses: nsources/setup-ndk@v1
+      with:
+        ndk-version: r25b
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: 'gradle'
 
-    - name: Download Prebuilt Libv2ray AAR
+    - name: Download Official Core AAR Release
       run: |
         mkdir -p V2rayNG/app/libs
-        cd V2rayNG/app/libs
-        # دانلود مستقیم فایل AAR معتبر هسته از مخزن رسمی
-        curl -L -o libv2ray.aar https://github.com/2dust/v2rayNG/releases/download/1.8.12/libv2ray.aar || true
-        
-        # اگر فایل مستقیم نبود، هسته را از بسته AAR استخراج کن
-        if [ ! -s libv2ray.aar ]; then
-          curl -L -o core.zip https://github.com/2dust/v2rayNG/archive/refs/heads/master.zip
+        # دانلود فایل AAR ریلیز شده از مخزن معتبر برای جلوگیری از دریافت فایل HTML
+        gh release download --repo 2dust/v2rayNG --pattern "*.aar" --dir V2rayNG/app/libs/ || true
+        # در صورت عدم وجود، استفاده از فایل جایگزین
+        if [ ! -f V2rayNG/app/libs/libv2ray.aar ]; then
+          curl -sL https://github.com/2dust/v2rayNG/releases/download/1.8.12/libv2ray.aar -o V2rayNG/app/libs/libv2ray.aar
         fi
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build Unsigned Debug APK
+    - name: Build Debug APK
       run: |
         chmod +x V2rayNG/gradlew
         cd V2rayNG
-        ./gradlew assembleFdroidDebug --stacktrace --no-daemon
+        ./gradlew assembleFdroidDebug --no-daemon
 
     - name: Upload Custom APK
       uses: actions/upload-artifact@v4
