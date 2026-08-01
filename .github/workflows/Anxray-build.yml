@@ -16,11 +16,6 @@ jobs:
         submodules: 'recursive'
         fetch-depth: 0
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.21'
-
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -28,28 +23,14 @@ jobs:
         distribution: 'temurin'
         cache: 'gradle'
 
-    - name: Build Core Libraries (Libv2ray)
-      run: |
-        git submodule update --init --recursive
-        # اگر پوشه گوموبایل وجود داره هسته کامپایل بشه
-        if [ -d "AndroidLibXrayLite" ]; then
-          cd AndroidLibXrayLite
-          go install golang.org/x/mobile/cmd/gomobile@latest
-          gomobile init
-          go get golang.org/x/mobile/bind
-          gomobile bind -v -target=android -androidapi 21 -ldflags="-s -w" .
-          cp *.aar ../V2rayNG/app/libs/ 2>/dev/null || true
-          cd ..
-        fi
-
-    - name: Build APK with Gradle
+    - name: Build Unsigned Release APK
       run: |
         chmod +x V2rayNG/gradlew
         cd V2rayNG
-        ./gradlew assembleRelease --no-daemon
+        ./gradlew assembleFdroidRelease --no-daemon
 
     - name: Upload Custom APK
       uses: actions/upload-artifact@v4
       with:
         name: My-Custom-V2RayNG
-        path: V2rayNG/app/build/outputs/apk/release/*.apk
+        path: V2rayNG/app/build/outputs/apk/**/*.apk
