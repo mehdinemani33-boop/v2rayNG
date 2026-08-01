@@ -21,9 +21,14 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: 'gradle'
 
-    - name: Build Unsigned Release APK
+    - name: Download Libv2ray Core AAR
+      run: |
+        mkdir -p V2rayNG/app/libs
+        # دانلود آخرین نسخه هسته آماده از انتشار رسمی
+        curl -L -o V2rayNG/app/libs/libv2ray.aar https://github.com/2dust/v2rayNG/raw/master/V2rayNG/app/libs/libv2ray.aar || true
+
+    - name: Build Unsigned APK
       run: |
         chmod +x V2rayNG/gradlew
         cd V2rayNG
