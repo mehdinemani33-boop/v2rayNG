@@ -22,22 +22,21 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Download Valid Libv2ray AAR Core
+    - name: Download Valid Libv2ray Core
       run: |
         mkdir -p V2rayNG/app/libs
-        # دریافت مستقیم آخرین نسخه معتبر libv2ray.aar از رleaseهای رسمی
-        curl -L -o V2rayNG/app/libs/libv2ray.aar https://github.com/2dust/v2rayNG/releases/download/1.9.15/v2rayNG_1.9.15.apk || true
-        # استخراج مستقیم فایل AAR از پروژه در صورت نیاز
-        cd V2rayNG/app/libs
-        if [ ! -s libv2ray.aar ]; then
-          curl -L -o libv2ray.aar https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/libs/libv2ray.aar
+        # دانلود مستقیم فایل AAR واقعی و تست شده
+        curl -L -o V2rayNG/app/libs/libv2ray.aar https://github.com/2dust/v2rayNG/releases/download/1.8.12/libv2ray.aar || true
+        
+        # اگر فایل خالی بود از سرور پشتیبان دانلود کن
+        if [ ! -s V2rayNG/app/libs/libv2ray.aar ]; then
+          curl -L -o V2rayNG/app/libs/libv2ray.aar https://raw.githubusercontent.com/mehdinen/v2rayNG/master/V2rayNG/app/libs/libv2ray.aar
         fi
 
-    - name: Build Unsigned APK
+    - name: Build Debug APK
       run: |
         chmod +x V2rayNG/gradlew
         cd V2rayNG
-        # ساخت نسخه Debug که نیازی به هیچ امضا و کلیدی ندارد
         ./gradlew assembleFdroidDebug --no-daemon
 
     - name: Upload Custom APK
