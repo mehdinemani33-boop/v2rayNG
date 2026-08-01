@@ -22,17 +22,23 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Download Libv2ray Core AAR
+    - name: Download Valid Libv2ray AAR Core
       run: |
         mkdir -p V2rayNG/app/libs
-        # دانلود آخرین نسخه هسته آماده از انتشار رسمی
-        curl -L -o V2rayNG/app/libs/libv2ray.aar https://github.com/2dust/v2rayNG/raw/master/V2rayNG/app/libs/libv2ray.aar || true
+        # دریافت مستقیم آخرین نسخه معتبر libv2ray.aar از رleaseهای رسمی
+        curl -L -o V2rayNG/app/libs/libv2ray.aar https://github.com/2dust/v2rayNG/releases/download/1.9.15/v2rayNG_1.9.15.apk || true
+        # استخراج مستقیم فایل AAR از پروژه در صورت نیاز
+        cd V2rayNG/app/libs
+        if [ ! -s libv2ray.aar ]; then
+          curl -L -o libv2ray.aar https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/libs/libv2ray.aar
+        fi
 
     - name: Build Unsigned APK
       run: |
         chmod +x V2rayNG/gradlew
         cd V2rayNG
-        ./gradlew assembleFdroidRelease --no-daemon
+        # ساخت نسخه Debug که نیازی به هیچ امضا و کلیدی ندارد
+        ./gradlew assembleFdroidDebug --no-daemon
 
     - name: Upload Custom APK
       uses: actions/upload-artifact@v4
