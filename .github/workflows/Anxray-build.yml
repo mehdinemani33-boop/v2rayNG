@@ -1,4 +1,4 @@
-name: Build V2RayNG APK
+name: Custom V2RayNG Build
 
 on:
   push:
@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout Code
       uses: actions/checkout@v4
       with:
         submodules: 'recursive'
         fetch-depth: 0
 
-    - name: Initialize and Update Submodules
-      run: |
-        git submodule sync
-        git submodule update --init --recursive
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -28,14 +28,28 @@ jobs:
         distribution: 'temurin'
         cache: 'gradle'
 
-    - name: Build Release APK
+    - name: Build Core Libraries (Libv2ray)
+      run: |
+        git submodule update --init --recursive
+        # اگر پوشه گوموبایل وجود داره هسته کامپایل بشه
+        if [ -d "AndroidLibXrayLite" ]; then
+          cd AndroidLibXrayLite
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          gomobile init
+          go get golang.org/x/mobile/bind
+          gomobile bind -v -target=android -androidapi 21 -ldflags="-s -w" .
+          cp *.aar ../V2rayNG/app/libs/ 2>/dev/null || true
+          cd ..
+        fi
+
+    - name: Build APK with Gradle
       run: |
         chmod +x V2rayNG/gradlew
         cd V2rayNG
-        ./gradlew assembleFdroidRelease --stacktrace
+        ./gradlew assembleRelease --no-daemon
 
-    - name: Upload APK Artifact
+    - name: Upload Custom APK
       uses: actions/upload-artifact@v4
       with:
-        name: v2rayNG-app
-        path: V2rayNG/app/build/outputs/apk/**/*.apk
+        name: My-Custom-V2RayNG
+        path: V2rayNG/app/build/outputs/apk/release/*.apk
