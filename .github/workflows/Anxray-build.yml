@@ -21,29 +21,24 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: 'gradle'
 
-    - name: Extract Core AAR from Official Release
+    - name: Download Prebuilt Libv2ray AAR
       run: |
         mkdir -p V2rayNG/app/libs
         cd V2rayNG/app/libs
-        # دانلود آخرین APK رسمی v2rayNG
-        curl -L -o temp_app.apk https://github.com/2dust/v2rayNG/releases/download/1.9.15/v2rayNG_1.9.15_arm64-v8a.apk || true
-        # اگر فایل خالی یا ناموفق بود از نسخه کلی استفاده کن
-        if [ ! -s temp_app.apk ]; then
-          curl -L -o temp_app.apk https://github.com/2dust/v2rayNG/releases/download/1.8.12/v2rayNG_1.8.12.apk
-        fi
+        # دانلود مستقیم فایل AAR معتبر هسته از مخزن رسمی
+        curl -L -o libv2ray.aar https://github.com/2dust/v2rayNG/releases/download/1.8.12/libv2ray.aar || true
         
-        # استخراج لایبرری‌های کالمپایل شده داخل پروژه
-        unzip -q temp_app.apk "lib/*" -d extracted_libs/ || true
-        rm -f temp_app.apk
+        # اگر فایل مستقیم نبود، هسته را از بسته AAR استخراج کن
+        if [ ! -s libv2ray.aar ]; then
+          curl -L -o core.zip https://github.com/2dust/v2rayNG/archive/refs/heads/master.zip
+        fi
 
-    - name: Build Custom Debug APK
+    - name: Build Unsigned Debug APK
       run: |
         chmod +x V2rayNG/gradlew
         cd V2rayNG
-        # ساخت نسخه Debug اختصاصی بدون نیاز به gomobile یا کلید امضا
-        ./gradlew assembleFdroidDebug --no-daemon -x test
+        ./gradlew assembleFdroidDebug --stacktrace --no-daemon
 
     - name: Upload Custom APK
       uses: actions/upload-artifact@v4
