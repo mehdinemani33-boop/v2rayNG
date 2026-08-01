@@ -19,7 +19,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.21'
+        go-version: '1.20'
 
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -30,14 +30,11 @@ jobs:
 
     - name: Build Libv2ray Core AAR with Go
       run: |
-        # نصب ابزار gomobile برای ساخت فایل aar
         go install golang.org/x/mobile/cmd/gomobile@latest
         gomobile init
         
-        # ساخت پوشه libs اگر وجود ندارد
         mkdir -p V2rayNG/app/libs
         
-        # کامپایل هسته AndroidLibXrayLite
         if [ -d "AndroidLibXrayLite" ]; then
           cd AndroidLibXrayLite
           gomobile bind -v -target=android -androidapi 21 -ldflags="-s -w" -o ../V2rayNG/app/libs/libv2ray.aar .
